@@ -10,6 +10,8 @@ import { UsersModule } from './users/users.module';
 import { BooksModule } from './books/books.module';
 import { User } from './users/user.entity';
 import { Book } from './books/book.entity';
+import { BookPage } from './book-page/book-page.entity';
+import { BookPageModule } from './book-page/books.module';
 
 @Module({
   imports: [
@@ -23,13 +25,14 @@ import { Book } from './books/book.entity';
         return {
           type: 'sqlite',
           database: config.get('DB_NAME'),
-          entities: [User, Book],
+          entities: [User, Book, BookPage],
           synchronize: true,
         };
       },
     }),
     UsersModule,
     BooksModule,
+    BookPageModule
   ],
   controllers: [AppController],
   providers: [

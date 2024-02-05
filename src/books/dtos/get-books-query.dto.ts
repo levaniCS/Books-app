@@ -8,3 +8,11 @@ export class GetBooksQueryDto {
   @IsOptional()
   page: number;
 }
+
+export class GetBookPageQueryDto {
+  @Transform(({ value }) => +value)
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  pageNumber: number;
+}

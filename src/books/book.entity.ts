@@ -10,9 +10,6 @@ export class Book {
   title: string;
 
   @Column()
-  content: string;
-
-  @Column()
   author: string;
 
   @ManyToOne(() => User, (user: User) => user.books, { eager: true })

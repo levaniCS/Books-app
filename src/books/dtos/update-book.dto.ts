@@ -1,13 +1,26 @@
-import { IsString, IsNumber, Min, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsString, IsNumber, Min, IsOptional, IsObject, ValidateNested, IsNotEmptyObject } from 'class-validator';
+
+export class UpdateBookPageDto {
+  @IsNumber()
+  pageId: number
+
+  @IsString()
+  newContent: string
+}
+
 
 export class UpdateBookDto {
   @IsString()
   @IsOptional()
   title: string;
 
-  @IsString()
+  @IsObject()
   @IsOptional()
-  content: string;
+  @IsNotEmptyObject()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateBookPageDto)
+  bookPage: UpdateBookPageDto
 
   @IsString()
   @IsOptional()
@@ -17,4 +30,9 @@ export class UpdateBookDto {
   @IsOptional()
   @Min(1)
   lastReadedPage: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(1)
+  lastReadedBook: number;
 }

@@ -17,7 +17,7 @@ import { CreateBookDto } from './dtos/create-book.dto';
 import { UpdateBookDto } from './dtos/update-book.dto';
 import { BookDto } from './dtos/book.dto';
 import { BooksService } from './book.service';
-import { GetBooksQueryDto } from './dtos/get-books-query.dto';
+import { GetBookPageQueryDto, GetBooksQueryDto } from './dtos/get-books-query.dto';
 
 @Controller('books')
 export class BooksController {
@@ -44,8 +44,8 @@ export class BooksController {
 
   @Get('/:id')
   @UseGuards(AuthGuard)
-  getBookById(@Param('id') id: string) {
-    return this.booksService.get(id);
+  getBookById(@Param('id') id: string, @Query() query: GetBookPageQueryDto, @CurrentUser() user: User) {
+    return this.booksService.get(id, query, user);
   }
 
   @Delete('/:id')

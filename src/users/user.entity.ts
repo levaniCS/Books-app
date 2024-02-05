@@ -20,9 +20,9 @@ export class User {
   @Column({ select: false })
   password: string;
 
-  @Column()
+  @Column({ nullable: true })
   lastReadedPage: number;
-  @Column()
+  @Column({ nullable: true })
   lastReadedBook: number;
 
   @OneToMany(() => Book, (book: Book) => book.creator)
