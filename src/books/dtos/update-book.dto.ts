@@ -9,6 +9,10 @@ export class UpdateBookDto {
   @IsOptional()
   content: string;
 
+  @IsString()
+  @IsOptional()
+  author: string;
+
   @IsNumber()
   @IsOptional()
   @Min(1)

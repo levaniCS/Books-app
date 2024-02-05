@@ -1,5 +1,5 @@
 import { User } from '../users/user.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 
 @Entity()
 export class Book {
@@ -12,9 +12,9 @@ export class Book {
   @Column()
   content: string;
 
-  @Column({ default: 1 })
-  lastReadedPage: number;
+  @Column()
+  author: string;
 
   @ManyToOne(() => User, (user: User) => user.books, { eager: true })
-  author: User;
+  creator: User;
 }

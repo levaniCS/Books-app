@@ -20,7 +20,12 @@ export class User {
   @Column({ select: false })
   password: string;
 
-  @OneToMany(() => Book, (book: Book) => book.author)
+  @Column()
+  lastReadedPage: number;
+  @Column()
+  lastReadedBook: number;
+
+  @OneToMany(() => Book, (book: Book) => book.creator)
   books: Book[];
 
   @Column({ default: false })

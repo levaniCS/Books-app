@@ -1,4 +1,4 @@
-import { IsString, IsNumber, Min, IsOptional } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class CreateBookDto {
   @IsString()
@@ -7,8 +7,6 @@ export class CreateBookDto {
   @IsString()
   content: string;
 
-  @IsNumber()
-  @IsOptional()
-  @Min(1)
-  lastReadedPage: number;
+  @IsString()
+  author: string;
 }

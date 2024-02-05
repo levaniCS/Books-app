@@ -8,9 +8,9 @@ export class BookDto {
   @Expose()
   content: string;
   @Expose()
-  lastReadedPage: number;
+  author: string;
 
-  @Transform(({ obj }) => obj.author.id)
+  @Transform(({ obj }) => obj.creator.id)
   @Expose()
-  author: number;
+  creator: number;
 }

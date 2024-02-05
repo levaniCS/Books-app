@@ -23,7 +23,7 @@ export class BooksService {
 
   create(bookDto: CreateBookDto, user: User) {
     const book = this.repo.create(bookDto);
-    book.author = user;
+    book.creator = user;
 
     return this.repo.save(book);
   }
@@ -35,7 +35,7 @@ export class BooksService {
     }
 
     // Only user which created book or any admin role user can update book
-    if (book.author.id !== user.id && !user.admin) {
+    if (book.creator.id !== user.id && !user.admin) {
       throw new ForbiddenException('you do not have permission to update this book')
     }
 
@@ -43,8 +43,9 @@ export class BooksService {
     return { ...book, ...bookDto };
   }
 
-  async get(id: string) {
+  async get(id: string, bookPage = 1) {
     const book = await this.repo.findOne(id);
+
     if (!book) {
       throw new NotFoundException('book not found');
     }
@@ -60,7 +61,7 @@ export class BooksService {
     }
 
     // Only user which created book or any admin role user can delete book
-    if (book.author.id !== user.id && !user.admin) {
+    if (book.creator.id !== user.id && !user.admin) {
       throw new ForbiddenException('you do not have permission to delete this book')
     }
 

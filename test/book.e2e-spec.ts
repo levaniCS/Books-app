@@ -42,7 +42,7 @@ describe('Book API (e2e)', () => {
         .expect(201);
 
         expect(body.id).toBeDefined();
-        expect(body.author).toEqual(userResponse.body.id);
+        expect(body.user).toEqual(userResponse.body.id);
     });
 
     it('throws an error unauthorized user tries to create a new book', async () => {
