@@ -2,8 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
-import { CreateBookDto } from 'src/books/dtos/create-book.dto';
 import { knownErrors } from './errors-list';
+import { CreateBookDto } from '../src/books/dtos/create-book.dto';
+import { UpdateBookDto } from '../src/books/dtos/update-book.dto';
 
 describe('Book API (e2e)', () => {
   let app: INestApplication;
@@ -17,17 +18,16 @@ describe('Book API (e2e)', () => {
     await app.init();
   });
 
-
   describe ('Create a new book API', () => {
     it('sign up as a new user and create book with provided data', async () => {
       const newUser = {
-        email: 'test3@email.com',
+        email: 'test1@email.com',
         password: 'testpassword'
       }
       const newBook: CreateBookDto = {
         title: 'new book',
         content: 'content for book',
-        lastReadedPage: 1
+        author: "author author"
       }
       const userResponse = await request(app.getHttpServer())
         .post('/auth/signup')
@@ -42,14 +42,15 @@ describe('Book API (e2e)', () => {
         .expect(201);
 
         expect(body.id).toBeDefined();
-        expect(body.user).toEqual(userResponse.body.id);
+        expect(body.content.length).toEqual(newBook.content.match(/.{1,2}/g).length)
+        expect(body.creator).toEqual(userResponse.body.id);
     });
 
     it('throws an error unauthorized user tries to create a new book', async () => {
       const newBook: CreateBookDto = {
         title: 'new book',
         content: 'content for book',
-        lastReadedPage: 1
+        author: "author author"
       }
 
       const { body } = await request(app.getHttpServer())
@@ -92,7 +93,7 @@ describe('Book API (e2e)', () => {
       const newBook: CreateBookDto = {
         title: 'new book2',
         content: 'content for book',
-        lastReadedPage: 1
+        author: "author author"
       }
       const userResponse = await request(app.getHttpServer())
         .post('/auth/signup')
@@ -112,8 +113,95 @@ describe('Book API (e2e)', () => {
         .expect(200);
 
       expect(getBookByIdBody).toBeDefined();
+      expect(getBookByIdBody.content?.pageNumber).toEqual(1)
+      expect(getBookByIdBody.content?.content).toEqual(newBook.content.match(/.{1,2}/g)[0])
       expect(getBookByIdBody.id).toEqual(createBookBody.id);
       expect(getBookByIdBody.title).toEqual(createBookBody.title);
+    });
+
+    it('sign up as a new user, create a book and get it by page number', async () => {
+      const newUser = {
+        email: 'test6@email.com',
+        password: 'testpassword'
+      }
+      const newBook: CreateBookDto = {
+        title: 'new book2',
+        content: 'content for book',
+        author: "author author"
+      }
+      const userResponse = await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send(newUser)
+        .expect(201);
+
+      const cookie = userResponse.get('Set-Cookie');
+      const { body: createBookBody } = await request(app.getHttpServer())
+        .post('/books')
+        .set('Cookie', cookie)
+        .send(newBook)
+        .expect(201);
+
+      const { body: getBookByIdBody } = await request(app.getHttpServer())
+        .get(`/books/${createBookBody.id}?pageNumber=3`)
+        .set('Cookie', cookie)
+        .expect(200);
+
+      expect(getBookByIdBody).toBeDefined();
+      expect(getBookByIdBody.content?.pageNumber).toEqual(3)
+      expect(getBookByIdBody.content?.content).toEqual(newBook.content.match(/.{1,2}/g)[2])
+      expect(getBookByIdBody.id).toEqual(createBookBody.id);
+      expect(getBookByIdBody.title).toEqual(createBookBody.title);
+    });
+
+    it('get the most recent book', async () => {
+      const newUser = {
+        email: 'test6@email.com',
+        password: 'testpassword'
+      }
+      const newBook: CreateBookDto = {
+        title: 'new book2',
+        content: 'content for book',
+        author: "author author"
+      }
+
+      const newBookRecent: CreateBookDto = {
+        title: 'recent book',
+        content: 'content for book2',
+        author: "author author"
+      }
+      const userResponse = await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send(newUser)
+        .expect(201);
+
+      const cookie = userResponse.get('Set-Cookie');
+      await request(app.getHttpServer())
+        .post('/books')
+        .set('Cookie', cookie)
+        .send(newBook)
+        .expect(201);
+      const { body: createBookBodyRecent } = await request(app.getHttpServer())
+        .post('/books')
+        .set('Cookie', cookie)
+        .send(newBookRecent)
+        .expect(201);
+
+      // Open second book page = 3
+      const { body: lastOpenedBookWithPage } = await request(app.getHttpServer())
+        .get(`/books/${createBookBodyRecent.id}?pageNumber=3`)
+        .set('Cookie', cookie)
+        .expect(200);
+
+      const { body: recentBook } = await request(app.getHttpServer())
+        .get(`/books/recent`)
+        .set('Cookie', cookie)
+        .expect(200);
+
+      expect(recentBook).toBeDefined();
+      expect(recentBook.content?.pageNumber).toEqual(3)
+      expect(recentBook.content?.content).toEqual(newBook.content.match(/.{1,2}/g)[2])
+      expect(recentBook.id).toEqual(lastOpenedBookWithPage.id);
+      expect(recentBook.title).toEqual(lastOpenedBookWithPage.title);
     });
 
     it('throws 404 if book doesn not exist', async () => {
@@ -152,12 +240,12 @@ describe('Book API (e2e)', () => {
       const newBook: CreateBookDto = {
         title: 'new book2',
         content: 'content for book',
-        lastReadedPage: 1
+        author: "author author"
       }
       const newBook2: CreateBookDto = {
         title: 'new book2',
         content: 'content for book',
-        lastReadedPage: 1
+        author: "author author"
       }
 
       const { body: createBookBody1 } = await request(app.getHttpServer())
@@ -203,6 +291,7 @@ describe('Book API (e2e)', () => {
         books.push({
           title: `new book - ${i}`,
           content: `content for book - ${i}`,
+          author: 'test author'
         } as CreateBookDto)
       }
 
@@ -257,7 +346,7 @@ describe('Book API (e2e)', () => {
       const newBook: CreateBookDto = {
         title: 'new book2',
         content: 'content for book',
-        lastReadedPage: 1
+        author: "author author"
       }
       const userResponse = await request(app.getHttpServer())
         .post('/auth/signup')
@@ -275,6 +364,13 @@ describe('Book API (e2e)', () => {
         .delete(`/books/${createBookBody.id}`)
         .set('Cookie', cookie)
         .expect(200);
+
+      const { body } = await request(app.getHttpServer())
+        .delete(`/books/${createBookBody.id}`)
+        .set('Cookie', cookie)
+        .expect(404);
+
+      expect(body.error).toEqual(knownErrors.NOT_FOUND)
       expect(response).toBeDefined();
       expect(!!response.text).toEqual(true);
     });
@@ -312,7 +408,7 @@ describe('Book API (e2e)', () => {
       const newBook: CreateBookDto = {
         title: 'new book2',
         content: 'content for book',
-        lastReadedPage: 1
+        author: "author author"
       }
       const user1Response = await request(app.getHttpServer())
         .post('/auth/signup')
@@ -351,11 +447,11 @@ describe('Book API (e2e)', () => {
       const newBook: CreateBookDto = {
         title: 'new book2',
         content: 'content for book',
-        lastReadedPage: 1
+        author: "author author"
       }
       const updateBook: Partial<CreateBookDto> = {
         title: 'updated book data',
-        lastReadedPage: 3
+        author: "author author22"
       }
       const userResponse = await request(app.getHttpServer())
         .post('/auth/signup')
@@ -384,7 +480,53 @@ describe('Book API (e2e)', () => {
       expect(updateBookBody).toBeDefined();
       expect(getBookByIdBody).toBeDefined();
       expect(getBookByIdBody.title).toEqual(updateBook.title);
-      expect(getBookByIdBody.lastReadedPage).toEqual(updateBook.lastReadedPage);
+    });
+
+    it('sign up as a new user, create a book and update page ( pageId = 1 )', async () => {
+      const newUser = {
+        email: 'test6@email.com',
+        password: 'testpassword'
+      }
+      const newBook: CreateBookDto = {
+        title: 'new book2',
+        content: 'content for book',
+        author: "author author"
+      }
+      const updateBook: Partial<UpdateBookDto> = {
+        title: 'updated book data',
+        bookPage: {
+          pageId: 1,
+          newContent: "test 33333 test"
+      }
+      }
+      const userResponse = await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send(newUser)
+        .expect(201);
+
+      const cookie = userResponse.get('Set-Cookie');
+      const { body: createBookBody } = await request(app.getHttpServer())
+        .post('/books')
+        .set('Cookie', cookie)
+        .send(newBook)
+        .expect(201);
+
+      const { body: updateBookBody } = await request(app.getHttpServer())
+        .patch(`/books/${createBookBody.id}`)
+        .set('Cookie', cookie)
+        .send(updateBook)
+        .expect(200);
+
+      // Get new book to verify
+      const { body: getBookByIdBody } = await request(app.getHttpServer())
+        .get(`/books/${updateBookBody.id}?pageNumber=1`)
+        .set('Cookie', cookie)
+        .expect(200);
+
+      expect(updateBookBody).toBeDefined();
+      expect(getBookByIdBody).toBeDefined();
+      expect(getBookByIdBody.title).toEqual(updateBook.title);
+      expect(getBookByIdBody.content.content).toEqual(updateBook.bookPage.newContent);
     });
 
     it('throws 404 if book doesn not exist', async () => {
@@ -394,7 +536,7 @@ describe('Book API (e2e)', () => {
       }
       const updateBook: Partial<CreateBookDto> = {
         title: 'updated book data',
-        lastReadedPage: 3
+        author: "author author2222"
       }
       const userResponse = await request(app.getHttpServer())
         .post('/auth/signup')
@@ -425,11 +567,10 @@ describe('Book API (e2e)', () => {
       const newBook: CreateBookDto = {
         title: 'new book2',
         content: 'content for book',
-        lastReadedPage: 1
+        author: "author author"
       }
       const updateBook: Partial<CreateBookDto> = {
         title: 'updated book data',
-        lastReadedPage: 3
       }
       const user1Response = await request(app.getHttpServer())
         .post('/auth/signup')

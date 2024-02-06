@@ -6,8 +6,8 @@ import { CreateBookDto } from './dtos/create-book.dto';
 import { Book } from './book.entity';
 import { UpdateBookDto } from './dtos/update-book.dto';
 import { GetBookPageQueryDto, GetBooksQueryDto } from './dtos/get-books-query.dto';
-import { BookPageService } from 'src/book-page/book-page.service';
-import { UsersService } from 'src/users/users.service';
+import { BookPageService } from '../book-page/book-page.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class BooksService {
@@ -47,7 +47,12 @@ export class BooksService {
     }
 
     // Update book information
-    await this.repo.update(id, { title: bookDto.title, author: bookDto.author });
+    const payload: Partial<UpdateBookDto> = {}
+    if (bookDto.title) payload.title = bookDto.title
+    if (bookDto.author) payload.author = bookDto.author
+    if (Object.keys(payload).length > 0) {
+      await this.repo.update(id, payload);
+    }
 
     // Update book page if 'bookPage' exists payload
     const content = await this.bookPageService.update(id, bookDto.bookPage)
