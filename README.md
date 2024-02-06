@@ -7,8 +7,14 @@ This project uses the following environment variables:
 |COOKIE_KEY           | any name for cookie secret
 
 
-create new file in the root ( .env.developmment and put variables inside)
+create new file in the root ( .env.developmment and put variables
+inside)
 
+
+POSTMAN JSON LINK TO SEE REQUESTS AND COLLECTIONS DOCUMENTED
+https://api.postman.com/collections/9025066-340f0bf9-b22d-428d-8cf9-e6898eaf86d2?access_key=PMAT-01HNZSZQ30VA521SVKDF9XPBBJ
+
+inside POSTMAN   import > links > paste the link above and confirm
 
 
 # Pre-requisites
